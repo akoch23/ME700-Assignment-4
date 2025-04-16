@@ -1,9 +1,9 @@
-import gmsh
-import dolfinx.io
-import numpy as np
-import matplotlib.pyplot as plt
-import ufl
-import pyvista
+import gmsh # Import GMSH Python API, necessary for 3D Finite Element Mesh generation for loading into DOLFINx
+import dolfinx.io # Import necessary computing environment (FEniCS)
+import numpy as np # Import Python Numerical library for specific mathematical operations
+import matplotlib.pyplot as plt # Import Python Graphical Plotting library for data plotting, library call abbreviated as "plt"
+import ufl # Import Unified Form Language (FEniCS)
+import pyvista # Import Python library for 3D data visualization (FE meshs and related animations)
 
 from dolfinx.io import gmshio
 from dolfinx.fem.petsc import LinearProblem
