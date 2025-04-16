@@ -1,1 +1,4 @@
-# ME700-Assignment-4
+# ME700 Assignment 4
+
+### Part 1
+
