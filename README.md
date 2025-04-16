@@ -5,8 +5,8 @@
 
 ## Part 1
 
-### FEniCSX Repository (necessary for Example code):
-
+### DOLFINx Installation (disregard for now, Part 1 does not require it):
+https://docs.fenicsproject.org/dolfinx/main/python/installation
 
 ### Conda environment installation and testing
 
