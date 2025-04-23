@@ -22,6 +22,7 @@ def run_simulation(mesh_size=0.05, poly_order=1, label="original"):
     gmsh.model.mesh.generate(gdim)
 
     domain, cell_markers, facet_markers = gmshio.model_to_mesh(gmsh.model, MPI.COMM_WORLD, 0, gdim=gdim)
+    mpirun -n 4 python your_script.py
     gmsh.finalize()
 
     V = fem.functionspace(domain, ("Lagrange", poly_order))
