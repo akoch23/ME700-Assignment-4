@@ -6,7 +6,7 @@ from dolfinx import mesh # Mesh generation class within DolfinX
 
 # Define discrete domain (construct singular mesh, parallel processing)
 domain = mesh.create_unit_square(MPI.COMM_WORLD, 8, 8, mesh.CellType.quadrilateral) # Creates a square mesh from 8 x 8 quadrilateral elements, mesh generation is distributed across all available processors
-mpirun -n 2 python3 t1.py # Alters above command, script will specifically use 2 processors
+mpirun -n 2 Part_2_a.py # Alters above command, script will specifically use 2 processors
 
 # Create finite element function space
 from dolfinx.fem import functionspace
