@@ -13,16 +13,16 @@ def run_simulation(mesh_size=0.05, poly_order=1, label="original"):
     from dolfinx.plot import vtk_mesh
 
     gmsh.initialize()
-    gmsh.model.occ.addDisk(0, 0, 0, 1, 1)
+    membrane = gmsh.model.occ.addDisk(0, 0, 0, 1, 1)
     gmsh.model.occ.synchronize()
     gdim = 2
-    gmsh.model.addPhysicalGroup(gdim, [1], 1)
+    gmsh.model.addPhysicalGroup(gdim, [membrane], 1)
     gmsh.option.setNumber("Mesh.CharacteristicLengthMin", mesh_size)
     gmsh.option.setNumber("Mesh.CharacteristicLengthMax", mesh_size)
     gmsh.model.mesh.generate(gdim)
 
     domain, cell_markers, facet_markers = gmshio.model_to_mesh(gmsh.model, MPI.COMM_WORLD, 0, gdim=gdim)
-    mpirun -n 4 python your_script.py
+    mpirun -n 4 python Part_2_b.py
     gmsh.finalize()
 
     V = fem.functionspace(domain, ("Lagrange", poly_order))
