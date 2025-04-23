@@ -45,7 +45,7 @@ from dolfinx.fem.petsc import LinearProblem
 problem = LinearProblem(a, L, bcs=[bc], petsc_options={"ksp_type": "preonly", "pc_type": "lu"}) # LinearProblem solves the linear system for the weak formuation (PETSc)
 uh = problem.solve() # Numerical solution of the Poisson equation after solving the linear problem
 
-# Computing Solution Error
+# Computing Solution Error (Validation Step)
 V2 = fem.functionspace(domain, ("Lagrange", 2)) # Defines higher-degree function space (L^2 elements, degree 2 instead of degree 1) for the exact solution
 uex = fem.Function(V2) # Defines Finite Element Function over space V2
 uex.interpolate(lambda x: 1 + x[0]**2 + 2 * x[1]**2) # Interpolates the analytical solution into the higher-order function space
