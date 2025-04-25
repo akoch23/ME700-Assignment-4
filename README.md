@@ -33,4 +33,6 @@ conda install -c conda-forge fenics-dolfinx mpich pyvista
 
 Finally, install remaining libraries:
 ```bash
-
+pip install imageio
+pip install gmsh
+```
