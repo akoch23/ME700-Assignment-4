@@ -3,8 +3,6 @@
 [![python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 ![os](https://img.shields.io/badge/os-ubuntu%20|%20macos%20|%20windows-blue.svg)
 
-## Part 1
-
 ### Conda environment installation and testing
 
 To install this package, first establish a new conda environment:
@@ -38,3 +36,11 @@ pip install gmsh
 ```
 
 Alternatively, you may use the mamba command for faster results. In either case, installation of libraries will likely take several minutes, so do not be alarmed if it appears to be taking an unusually long time.
+
+### Part A:
+
+
+### Part B:
+
+
+### Part C:
