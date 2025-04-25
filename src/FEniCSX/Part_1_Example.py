@@ -7,24 +7,24 @@ import ufl # Import Unified Form Language (FEniCS)
 import pyvista # Import Python library for 3D data visualization (FE meshs and related animations)
 
 # Specific DOLFINx imports for FEM operations
-from dolfinx.io import gmshio  # Tools to convert Gmsh models into DOLFINx mesh structures
-from dolfinx.fem.petsc import LinearProblem  # High-level interface for linear variational problems
-from mpi4py import MPI  # Parallel computing via MPI
-from dolfinx import fem  # FEM functionality (function spaces, BCs, etc.)
-from dolfinx import default_scalar_type  # Sets float precision for DOLFINx operations
-from dolfinx.plot import vtk_mesh  # Conversion of DOLFINx meshes to VTK format for PyVista
-from dolfinx import geometry  # Geometry tools for queries and evaluations
-from pathlib import Path  # File and directory path manipulation
+from dolfinx.io import gmshio # Tools to convert Gmsh models into DOLFINx mesh structures
+from dolfinx.fem.petsc import LinearProblem # High-level interface for linear variational problems
+from mpi4py import MPI # Parallel computing via MPI
+from dolfinx import fem # FEM functionality (function spaces, BCs, etc.)
+from dolfinx import default_scalar_type # Sets float precision for DOLFINx operations
+from dolfinx.plot import vtk_mesh # Conversion of DOLFINx meshes to VTK format for PyVista
+from dolfinx import geometry # Geometry tools for queries and evaluations
+from pathlib import Path # File and directory path manipulation
 
 # Mesh Generation for Model (2D Circular Disk)
 gmsh.initialize()  # Initialize the Gmsh API session
-membrane = gmsh.model.occ.addDisk(0, 0, 0, 1, 1)  # Create a 2D disk with radius 1 centered at origin
-gmsh.model.occ.synchronize()  # Finalize CAD operations and synchronize the model
-gdim = 2  # Geometric dimension for 2D model
-gmsh.model.addPhysicalGroup(gdim, [membrane], 1)  # Assign physical group for FEM tagging
-gmsh.option.setNumber("Mesh.CharacteristicLengthMin", 0.05)  # Set mesh resolution (min)
-gmsh.option.setNumber("Mesh.CharacteristicLengthMax", 0.05)  # Set mesh resolution (max)
-gmsh.model.mesh.generate(gdim)  # Generate 2D mesh
+membrane = gmsh.model.occ.addDisk(0, 0, 0, 1, 1) # Create a 2D disk with radius 1 centered at origin
+gmsh.model.occ.synchronize() # Finalize CAD operations and synchronize the model
+gdim = 2 # Geometric dimension for 2D model
+gmsh.model.addPhysicalGroup(gdim, [membrane], 1) # Assign physical group for FEM tagging
+gmsh.option.setNumber("Mesh.CharacteristicLengthMin", 0.05) # Set mesh resolution (min)
+gmsh.option.setNumber("Mesh.CharacteristicLengthMax", 0.05) # Set mesh resolution (max)
+gmsh.model.mesh.generate(gdim) # Generate 2D mesh
 
 Convert Gmsh Mesh to DOLFINx Mesh
 gmsh_model_rank = 0  # Ensure only one process loads the mesh (MPI parallelism)
@@ -35,26 +35,26 @@ domain, cell_markers, facet_markers = gmshio.model_to_mesh(gmsh.model, mesh_comm
 V = fem.functionspace(domain, ("Lagrange", 1))  # Linear Lagrange function space (scalar field) for displacement
 
 # Define Mathematical Expression for External Load (Pressure)
-x = ufl.SpatialCoordinate(domain)  # Spatial coordinates (symbolic) 
+x = ufl.SpatialCoordinate(domain)  # Spatial coordinates (symbolic) # Get symbolic spatial coordinate x = (x[0], x[1])
 beta = fem.Constant(domain, default_scalar_type(12))  # Controls decay of load
-R0 = fem.Constant(domain, default_scalar_type(0.3))  # Offset in y
+R0 = fem.Constant(domain, default_scalar_type(0.3))  # Offset in y-direction
 p = 4 * ufl.exp(-beta**2 * (x[0]**2 + (x[1] - R0)**2))  # Gaussian load centered at y = R0
 
-# Define Boundary Conditions
-def on_boundary(x):
+# Define/Apply Boundary Conditions
+def on_boundary(x): # Identify boundary points on circle's edge using radius check
     return np.isclose(np.sqrt(x[0]**2 + x[1]**2), 1)  # Dirichlet BC on the circle
 
-boundary_dofs = fem.locate_dofs_geometrical(V, on_boundary)  # Find DOFs on boundary
-bc = fem.dirichletbc(default_scalar_type(0), boundary_dofs, V)  # Set u = 0 on boundary
+boundary_dofs = fem.locate_dofs_geometrical(V, on_boundary)  # Locate DOFs on boundary
+bc = fem.dirichletbc(default_scalar_type(0), boundary_dofs, V)  # Set u = 0 on boundary (clamped)
 
-# Define Variational Problem
-u = ufl.TrialFunction(V)
-v = ufl.TestFunction(V)
+# Define Variational Problem (Weak Formulation)
+u = ufl.TrialFunction(V) # Trial function (unknown displacement)
+v = ufl.TestFunction(V) # Test function (virtual displacement)
 a = ufl.dot(ufl.grad(u), ufl.grad(v)) * ufl.dx  # Bilinear form (stiffness matrix)
 L = p * v * ufl.dx  # Linear form (load vector)
 
-problem = LinearProblem(a, L, bcs=[bc], petsc_options={"ksp_type": "preonly", "pc_type": "lu"})  # Solver setup
-uh = problem.solve()  # Solve for displacement
+problem = LinearProblem(a, L, bcs=[bc], petsc_options={"ksp_type": "preonly", "pc_type": "lu"})  # Solver setup, where ksp_type is for direct solver and pc_type is for LU decomposition
+uh = problem.solve()  # Solve for displacement field
 
 # Interpolate Pressure Field for Visualization
 Q = fem.functionspace(domain, ("Lagrange", 5))  # Higher-order space for smoother visualization
@@ -62,7 +62,7 @@ expr = fem.Expression(p, Q.element.interpolation_points())  # Interpolation of p
 pressure = fem.Function(Q)
 pressure.interpolate(expr)
 
-# PyVista Visualization
+# PyVista Visualization of Deformed Mesh
 pyvista.start_xvfb()  # Start virtual framebuffer for headless rendering
 
 # Extract topology from mesh and create pyvista mesh
@@ -80,7 +80,7 @@ if not pyvista.OFF_SCREEN:
 else:
     plotter.screenshot("deflection.png")
 
-# Visualize Pressure Field
+# PyVista Visualization of Pressure Field
 load_plotter = pyvista.Plotter()
 p_grid = pyvista.UnstructuredGrid(*vtk_mesh(Q))  # Create PyVista grid for pressure
 p_grid.point_data["p"] = pressure.x.array.real  # Attach pressure data
@@ -117,7 +117,7 @@ points_on_proc = np.array(points_on_proc, dtype=np.float64)
 u_values = uh.eval(points_on_proc, cells)  # Evaluate displacement
 p_values = pressure.eval(points_on_proc, cells)  # Evaluate pressure
 
-# Plot Vertical Profiles
+# Plot 1D Profiles of Displacement and Pressure
 fig = plt.figure()
 plt.plot(points_on_proc[:, 1], 50 * u_values, "k", linewidth=2, label="Deflection ($\\times 50$)")
 plt.plot(points_on_proc[:, 1], p_values, "b--", linewidth=2, label="Load")
