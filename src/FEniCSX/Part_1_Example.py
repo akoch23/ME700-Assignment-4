@@ -1,3 +1,4 @@
+# Library Imports
 import gmsh # Import GMSH Python API, necessary for 3D Finite Element Mesh generation for loading into DOLFINx
 import dolfinx.io # Import necessary computing environment (FEniCS)
 import numpy as np # Import Python Numerical library for specific mathematical operations
@@ -5,36 +6,36 @@ import matplotlib.pyplot as plt # Import Python Graphical Plotting library for d
 import ufl # Import Unified Form Language (FEniCS)
 import pyvista # Import Python library for 3D data visualization (FE meshs and related animations)
 
-# Specific Imports
-from dolfinx.io import gmshio  # Convert GMSH models into DOLFINx-compatible meshes
-from dolfinx.fem.petsc import LinearProblem  # Simplified linear solver interface
-from mpi4py import MPI  # MPI support for parallel execution
-from dolfinx import fem  # Finite element tools (Function, BCs, FunctionSpace)
-from dolfinx import default_scalar_type  # Default float type (float64 or float32)
-from dolfinx.plot import vtk_mesh  # Convert mesh data for VTK-based tools
-from dolfinx import geometry  # Tools for spatial geometry queries
-from pathlib import Path  # Filesystem path manipulation
+# Specific DOLFINx imports for FEM operations
+from dolfinx.io import gmshio  # Tools to convert Gmsh models into DOLFINx mesh structures
+from dolfinx.fem.petsc import LinearProblem  # High-level interface for linear variational problems
+from mpi4py import MPI  # Parallel computing via MPI
+from dolfinx import fem  # FEM functionality (function spaces, BCs, etc.)
+from dolfinx import default_scalar_type  # Sets float precision for DOLFINx operations
+from dolfinx.plot import vtk_mesh  # Conversion of DOLFINx meshes to VTK format for PyVista
+from dolfinx import geometry  # Geometry tools for queries and evaluations
+from pathlib import Path  # File and directory path manipulation
 
 # Mesh Generation for Model (2D Circular Disk)
-gmsh.initialize()  # Start GMSH session
-membrane = gmsh.model.occ.addDisk(0, 0, 0, 1, 1)  # Add a 2D circular disk (unit radius)
-gmsh.model.occ.synchronize()  # Finalize geometry changes
-gdim = 2  # Geometric dimension (2D)
-gmsh.model.addPhysicalGroup(gdim, [membrane], 1)  # Tag the disk for FEM reference
-gmsh.option.setNumber("Mesh.CharacteristicLengthMin", 0.05)  # Mesh size control (min)
-gmsh.option.setNumber("Mesh.CharacteristicLengthMax", 0.05)  # Mesh size control (max)
+gmsh.initialize()  # Initialize the Gmsh API session
+membrane = gmsh.model.occ.addDisk(0, 0, 0, 1, 1)  # Create a 2D disk with radius 1 centered at origin
+gmsh.model.occ.synchronize()  # Finalize CAD operations and synchronize the model
+gdim = 2  # Geometric dimension for 2D model
+gmsh.model.addPhysicalGroup(gdim, [membrane], 1)  # Assign physical group for FEM tagging
+gmsh.option.setNumber("Mesh.CharacteristicLengthMin", 0.05)  # Set mesh resolution (min)
+gmsh.option.setNumber("Mesh.CharacteristicLengthMax", 0.05)  # Set mesh resolution (max)
 gmsh.model.mesh.generate(gdim)  # Generate 2D mesh
 
-# Convert Mesh to FEniCSx
-gmsh_model_rank = 0  # Only this rank loads the mesh (others will get it via MPI)
+Convert Gmsh Mesh to DOLFINx Mesh
+gmsh_model_rank = 0  # Ensure only one process loads the mesh (MPI parallelism)
 mesh_comm = MPI.COMM_WORLD  # MPI communicator for parallelism
 domain, cell_markers, facet_markers = gmshio.model_to_mesh(gmsh.model, mesh_comm, gmsh_model_rank, gdim=gdim)
 
 # Define Function Space
-V = fem.functionspace(domain, ("Lagrange", 1))  # Linear Lagrange function space for displacement
+V = fem.functionspace(domain, ("Lagrange", 1))  # Linear Lagrange function space (scalar field) for displacement
 
-# Define Mathematical Expression for Load (Pressure)
-x = ufl.SpatialCoordinate(domain)  # Spatial coordinates (symbolic)
+# Define Mathematical Expression for External Load (Pressure)
+x = ufl.SpatialCoordinate(domain)  # Spatial coordinates (symbolic) 
 beta = fem.Constant(domain, default_scalar_type(12))  # Controls decay of load
 R0 = fem.Constant(domain, default_scalar_type(0.3))  # Offset in y
 p = 4 * ufl.exp(-beta**2 * (x[0]**2 + (x[1] - R0)**2))  # Gaussian load centered at y = R0
