@@ -36,3 +36,5 @@ Finally, install remaining libraries:
 pip install imageio
 pip install gmsh
 ```
+
+Alternatively, you may use the mamba command for faster results. In either case, installation of libraries will likely take several minutes, so do not be alarmed if it appears to be taking an unusually long time.
