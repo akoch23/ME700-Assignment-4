@@ -5,18 +5,15 @@
 
 ## Part 1
 
-### DOLFINx Installation (disregard for now, Part 1 does not require it):
-https://docs.fenicsproject.org/dolfinx/main/python/installation
-
 ### Conda environment installation and testing
 
 To install this package, first establish a new conda environment:
 ```bash
-conda create --name FEniCSX-solver-env python=3.12
+conda create -n fenicsx-env python=3.12
 ```
 Afterwards, activate the environment:
 ```bash
-conda activate FEniCSX-solver-env
+conda activate fenicsx-env
 ```
 
 You can double check if the installed version of python is indeed version 3.12 in the new conda environment:
@@ -29,12 +26,11 @@ Ensure that pip is using the latest version of setuptools:
 pip install --upgrade pip setuptools wheel
 ```
 
-Create an editable install of the newton's method code (reminder: make sure you're in the right directory for this step, using the cd: [insert folder path] command)
+Follow by installing DolfinX and other necessary libraries:
 ```bash
-pip install -e .
+conda install -c conda-forge fenics-dolfinx mpich pyvista
 ```
 
-Test that the code is working with pytest:
+Finally, install remaining libraries:
 ```bash
-pytest -v --cov=DSM_functions --cov-report term-missing
-```
+
