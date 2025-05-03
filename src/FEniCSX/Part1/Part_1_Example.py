@@ -1,4 +1,5 @@
 # Library Imports
+import os
 import gmsh # Import GMSH Python API, necessary for 3D Finite Element Mesh generation for loading into DOLFINx
 import dolfinx.io # Import necessary computing environment (FEniCS)
 import numpy as np # Import Python Numerical library for specific mathematical operations
@@ -25,20 +26,25 @@ gmsh.model.addPhysicalGroup(gdim, [membrane], 1) # Assign physical group for FEM
 gmsh.option.setNumber("Mesh.CharacteristicLengthMin", 0.05) # Set mesh resolution (min)
 gmsh.option.setNumber("Mesh.CharacteristicLengthMax", 0.05) # Set mesh resolution (max)
 gmsh.model.mesh.generate(gdim) # Generate 2D mesh
+print("GMSH mesh generated.")
 
-Convert Gmsh Mesh to DOLFINx Mesh
+# Convert Gmsh Mesh to DOLFINx Mesh
 gmsh_model_rank = 0  # Ensure only one process loads the mesh (MPI parallelism)
 mesh_comm = MPI.COMM_WORLD  # MPI communicator for parallelism
 domain, cell_markers, facet_markers = gmshio.model_to_mesh(gmsh.model, mesh_comm, gmsh_model_rank, gdim=gdim)
+print(f"Rank {MPI.COMM_WORLD.rank}: Mesh conversion to DOLFINx done.")
+gmsh.finalize()
 
 # Define Function Space
 V = fem.functionspace(domain, ("Lagrange", 1))  # Linear Lagrange function space (scalar field) for displacement
+print("Function space V defined.")
 
 # Define Mathematical Expression for External Load (Pressure)
 x = ufl.SpatialCoordinate(domain)  # Spatial coordinates (symbolic) # Get symbolic spatial coordinate x = (x[0], x[1])
 beta = fem.Constant(domain, default_scalar_type(12))  # Controls decay of load
 R0 = fem.Constant(domain, default_scalar_type(0.3))  # Offset in y-direction
 p = 4 * ufl.exp(-beta**2 * (x[0]**2 + (x[1] - R0)**2))  # Gaussian load centered at y = R0
+print("Load expression defined.")
 
 # Define/Apply Boundary Conditions
 def on_boundary(x): # Identify boundary points on circle's edge using radius check
@@ -46,6 +52,7 @@ def on_boundary(x): # Identify boundary points on circle's edge using radius che
 
 boundary_dofs = fem.locate_dofs_geometrical(V, on_boundary)  # Locate DOFs on boundary
 bc = fem.dirichletbc(default_scalar_type(0), boundary_dofs, V)  # Set u = 0 on boundary (clamped)
+print("Boundary conditions applied.")
 
 # Define Variational Problem (Weak Formulation)
 u = ufl.TrialFunction(V) # Trial function (unknown displacement)
@@ -54,20 +61,25 @@ a = ufl.dot(ufl.grad(u), ufl.grad(v)) * ufl.dx  # Bilinear form (stiffness matri
 L = p * v * ufl.dx  # Linear form (load vector)
 
 problem = LinearProblem(a, L, bcs=[bc], petsc_options={"ksp_type": "preonly", "pc_type": "lu"})  # Solver setup, where ksp_type is for direct solver and pc_type is for LU decomposition
+print("Problem setup complete. Solving...")
 uh = problem.solve()  # Solve for displacement field
+print("Solve complete.")
 
 # Interpolate Pressure Field for Visualization
 Q = fem.functionspace(domain, ("Lagrange", 5))  # Higher-order space for smoother visualization
 expr = fem.Expression(p, Q.element.interpolation_points())  # Interpolation of p to Q
 pressure = fem.Function(Q)
 pressure.interpolate(expr)
+print("Pressure interpolated.")
 
 # PyVista Visualization of Deformed Mesh
-pyvista.start_xvfb()  # Start virtual framebuffer for headless rendering
+print("Starting PyVista visualization setup...")
+# pyvista.start_xvfb()  # Start virtual framebuffer for headless rendering
 
 # Extract topology from mesh and create pyvista mesh
 topology, cell_types, x = vtk_mesh(V)  # Extract mesh for VTK
 grid = pyvista.UnstructuredGrid(topology, cell_types, x)  # PyVista grid from mesh
+print("PyVista grid for displacement created.")
 
 # Set deflection values and add it to plotter
 grid.point_data["u"] = uh.x.array  # Attach displacement data
@@ -75,10 +87,7 @@ warped = grid.warp_by_scalar("u", factor=25)  # Exaggerate displacement for viz
 
 plotter = pyvista.Plotter()
 plotter.add_mesh(warped, show_edges=True, show_scalar_bar=True, scalars="u")
-if not pyvista.OFF_SCREEN:
-    plotter.show()
-else:
-    plotter.screenshot("deflection.png")
+plotter.show()
 
 # PyVista Visualization of Pressure Field
 load_plotter = pyvista.Plotter()
@@ -88,10 +97,8 @@ warped_p = p_grid.warp_by_scalar("p", factor=0.5)  # Warp to visualize pressure
 warped_p.set_active_scalars("p")
 load_plotter.add_mesh(warped_p, show_scalar_bar=True)
 load_plotter.view_xy()
-if not pyvista.OFF_SCREEN:
-    load_plotter.show()
-else:
-    load_plotter.screenshot("load.png")
+load_plotter.show()
+
 
 # Extract and Plot 1D Data Along Vertical Line (y-axis)
 tol = 0.001
@@ -106,6 +113,7 @@ bb_tree = geometry.bb_tree(domain, domain.topology.dim)
 cell_candidates = geometry.compute_collisions_points(bb_tree, points.T)
 colliding_cells = geometry.compute_colliding_cells(domain, cell_candidates, points.T)
 
+
 points_on_proc = []
 cells = []
 for i, point in enumerate(points.T):
@@ -116,6 +124,8 @@ for i, point in enumerate(points.T):
 points_on_proc = np.array(points_on_proc, dtype=np.float64)
 u_values = uh.eval(points_on_proc, cells)  # Evaluate displacement
 p_values = pressure.eval(points_on_proc, cells)  # Evaluate pressure
+if len(points_on_proc) == 0:
+    print(f"Rank {MPI.COMM_WORLD.rank}: No points found.")
 
 # Plot 1D Profiles of Displacement and Pressure
 fig = plt.figure()
@@ -128,13 +138,20 @@ plt.legend()
 plt.savefig(f"membrane_rank{MPI.COMM_WORLD.rank:d}.png")
 
 # Write Results to Disk
+print("Writing output to disk...")
+results_folder = Path("C:/Users/kochl/OneDrive/Desktop/ME700_Results/")
+results_folder.mkdir(exist_ok=True, parents=True)
+
+if MPI.COMM_WORLD.rank == 0:
+    results_folder.mkdir(exist_ok=True, parents=True)
+MPI.COMM_WORLD.Barrier()
+
 pressure.name = "Load"
 uh.name = "Deflection"
-results_folder = Path("results")
-results_folder.mkdir(exist_ok=True, parents=True)
 
 # Write pressure and deflection fields in VTX format
 with dolfinx.io.VTXWriter(MPI.COMM_WORLD, results_folder / "membrane_pressure.bp", [pressure], engine="BP4") as vtx:
     vtx.write(0.0)
 with dolfinx.io.VTXWriter(MPI.COMM_WORLD, results_folder / "membrane_deflection.bp", [uh], engine="BP4") as vtx:
     vtx.write(0.0)
+print("Output written.")
