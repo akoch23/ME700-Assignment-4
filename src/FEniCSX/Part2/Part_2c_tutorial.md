@@ -1,4 +1,4 @@
-# Part C: Failure of FEA Method (Membrane Deflection)
+# Part C: Failure of FEA Method (Disc Membrane Deflection)
 
 ## Creating the Mesh
 To create the digital geometry of the desired shape, the Python-API of GMSH is used. 
