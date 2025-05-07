@@ -4,38 +4,46 @@
 ![os](https://img.shields.io/badge/os-ubuntu%20|%20macos%20|%20windows-blue.svg)
 
 ## Conda environment installation and testing
-
+### Step 1
 To install this package, first establish a new conda environment:
 ```bash
 conda create -n fenicsx-env python=3.12
 ```
+### Step 2
 Afterwards, activate the environment:
 ```bash
 conda activate fenicsx-env
 ```
-
+### Step 2.1
 You can double check if the installed version of python is indeed version 3.12 in the new conda environment:
 ```bash
 python --version
 ```
-
+### Step 2.2
 Ensure that pip is using the latest version of setuptools:
 ```bash
 pip install --upgrade pip setuptools wheel
 ```
-
+### Step 3
 Follow by installing DolfinX and other necessary libraries:
+Note for Windows users: The below command, which is listed on the Fenicsx official download site, will work for the installion of fenics-dolfinx and pyvista, but NOT mpich. The petsc library will also not install properly on Windows. This can be circumvented by using Docker or WSL2 (Virtual Linux Interface).
 ```bash
 conda install -c conda-forge fenics-dolfinx mpich pyvista
-```
+`
 
+### Step 4 (Optional, important if using personal VS code editor)
 Finally, install remaining libraries:
 ```bash
 pip install imageio
 pip install gmsh
+pip install pyvista
+pip install petsc
+pip install mpi4py
+pip install ipykernel (if planning to use jupyter)
 ```
+Note: The lastest version of pyvista and vtk may not be compatible with each other, so make sure to look up which versions will work for you.
 
-Alternatively, you may use the mamba command for faster results. In either case, installation of libraries will likely take several minutes, so do not be alarmed if it appears to be taking an unusually long time.
+Alternatively, use the SCC VS code server for full access to said libraries, but still follow through Steps 1 - 3. In addition, you may use the mamba command instead of the conda command for faster results.
 
 ## Important: For all assignment parts, please refer to the main (src) folder and the Part 1 and 2 folders as needed (Part 2 folder contains Assignment 4 Parts A, B, and C).
 
