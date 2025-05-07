@@ -1,7 +1,8 @@
 # Mesh Refinement Study
 
+# Necessary Library Imports
 import pyvista                              # 3D visualization (not used here but could be useful for future extensions)
-from dolfinx import mesh, fem, plot, io    # DOLFINx core modules
+from dolfinx import mesh, fem, plot, io, default_scalar_type  # DOLFINx core modules
 from dolfinx.fem.petsc import LinearProblem # High-level FEM problem solving
 from mpi4py import MPI                      # For parallel computation
 import ufl                                  # Unified Form Language (for variational forms)
@@ -104,10 +105,10 @@ for order in range(1, 3):
 # Plotting Mesh Refinement Study
 
 # Compare max displacement vs. mesh refinement for the two polynomial orders
-plt.plot(mesh_list, displace_list_1, label='First Order Elements', color='blue')
-plt.plot(mesh_list, displace_list_2, label='Second Order Elements', color='red')
+plt.plot(mesh_list, displace_list_1, label='First Order Elements', color='red')
+plt.plot(mesh_list, displace_list_2, label='Second Order Elements', color='blue')
 plt.title("Mesh Refinement")                 # Plot title
-plt.xlabel("Number of Elements Along Length")         # x-axis label
+plt.xlabel("Number of Elements (Length)")         # x-axis label
 plt.ylabel("Max Displacement")               # y-axis label
 plt.legend(loc='lower right')                # Legend placement
 plt.savefig("Mesh Refinement.png", dpi=300)  # Save plot to PNG
