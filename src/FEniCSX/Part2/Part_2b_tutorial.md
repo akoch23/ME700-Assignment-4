@@ -122,5 +122,6 @@ plt.legend(loc='lower right')                # Legend placement
 plt.savefig("Mesh Refinement.png", dpi=300)  # Save plot to PNG
 plt.close()                                  # Close the plot
 ```
-![image](https://github.com/user-attachments/assets/a7f9ff03-8521-4307-b52c-6a248f64adb4)
+![image](https://github.com/user-attachments/assets/dee4eedf-de85-409e-a905-9141c3c6709d)
+
 
