@@ -6,6 +6,7 @@ import numpy as np # Import Python Numerical library for specific mathematical o
 import matplotlib.pyplot as plt # Import Python Graphical Plotting library for data plotting, library call abbreviated as "plt"
 import ufl # Import Unified Form Language (FEniCS)
 import pyvista # Import Python library for 3D data visualization (FE meshs and related animations)
+pyvista.start_xvfb()  # Start virtual framebuffer for headless rendering
 
 # Specific DOLFINx imports for FEM operations
 from dolfinx.io import gmshio # Tools to convert Gmsh models into DOLFINx mesh structures
@@ -14,6 +15,7 @@ from mpi4py import MPI # Parallel computing via MPI
 from dolfinx import fem # FEM functionality (function spaces, BCs, etc.)
 from dolfinx import default_scalar_type # Sets float precision for DOLFINx operations
 from dolfinx.plot import vtk_mesh # Conversion of DOLFINx meshes to VTK format for PyVista
+from dolfinx.io import XDMFFile
 from dolfinx import geometry # Geometry tools for queries and evaluations
 from pathlib import Path # File and directory path manipulation
 
@@ -72,47 +74,134 @@ pressure = fem.Function(Q)
 pressure.interpolate(expr)
 print("Pressure interpolated.")
 
+
 # PyVista Visualization of Deformed Mesh
 print("Starting PyVista visualization setup...")
-# pyvista.start_xvfb()  # Start virtual framebuffer for headless rendering
 
-# Extract topology from mesh and create pyvista mesh
-topology, cell_types, x = vtk_mesh(V)  # Extract mesh for VTK
-grid = pyvista.UnstructuredGrid(topology, cell_types, x)  # PyVista grid from mesh
-print("PyVista grid for displacement created.")
+# Extract topology from mesh and create displacement pyvista mesh
+topology, cell_types, x = vtk_mesh(uh.function_space)  # Extract mesh for VTK
+grid = pyvista.UnstructuredGrid(topology, cell_types, x.copy())  # PyVista grid from mesh
 
+# Ensure the warp is applied to z-direction only by rotating mesh
+grid.points[:, 2] = 0.0  # flatten to XY plane if necessary
 # Set deflection values and add it to plotter
 grid.point_data["u"] = uh.x.array  # Attach displacement data
-warped = grid.warp_by_scalar("u", factor=25)  # Exaggerate displacement for viz
+warped = grid.warp_by_scalar("u", factor=25) # Exaggerate displacement for visualization of displacement
+print("PyVista grid for displacement created.")
 
+print("Displacement shape:", uh.x.array.shape)
+print("Number of points in mesh:", grid.points.shape)
+
+if uh.x.array.shape[0] != grid.points.shape[0]:
+    print("Mismatch between scalar data and mesh points. Skipping warp.")
+else:
+    grid.point_data["u"] = uh.x.array
+    warped = grid.warp_by_scalar("u", factor=25)
+    print("Warping successful.")
+
+"""
 plotter = pyvista.Plotter()
+plotter.open_gif("deformed_membrane.gif")
 plotter.add_mesh(warped, show_edges=True, show_scalar_bar=True, scalars="u")
-plotter.show()
+plotter.write_frame()
+plotter.close()
+"""
+
+plotter = pyvista.Plotter(off_screen=True) # Off screen argument necessary
+plotter.add_mesh(warped, show_edges=True, show_scalar_bar=True, scalars="u")
+plotter.view_xy()
+plotter.camera.zoom(2.0)
+plotter.camera_position = [
+    (5, 5, 5),   # camera location
+    (0, 0, 0),      # focal point (where the camera looks)
+    (0, 0, 1),      # up direction
+]
+
+# This triggers rendering and saves an image
+plotter.render()
+plotter.screenshot("deformed_membrane.png")
+plotter.close()
+print("Deformation image generated.")
 
 # PyVista Visualization of Pressure Field
-load_plotter = pyvista.Plotter()
 p_grid = pyvista.UnstructuredGrid(*vtk_mesh(Q))  # Create PyVista grid for pressure
 p_grid.point_data["p"] = pressure.x.array.real  # Attach pressure data
 warped_p = p_grid.warp_by_scalar("p", factor=0.5)  # Warp to visualize pressure
 warped_p.set_active_scalars("p")
-load_plotter.add_mesh(warped_p, show_scalar_bar=True)
-load_plotter.view_xy()
-load_plotter.show()
+print("PyVista grid for pressure field created.")
+
+print("Pressure field shape:", pressure.x.array.real)
+# print("Number of points in mesh:")
 
 
+plotter = pyvista.Plotter(off_screen=True)
+plotter.add_mesh(warped_p, show_scalar_bar=True)
+plotter.view_xy()
+plotter.camera.zoom(1.25)
+plotter.camera_position = [
+    (5, 5, 5),   # camera location
+    (0, 0, 0),      # focal point (where the camera looks)
+    (0, 0, 1),      # up direction
+]
+
+plotter.render()
+plotter.screenshot("pressure_field.png")
+plotter.close()
+print("Pressure plot image generated.")
+
+'''
+print("Visualizing displacement field using Matplotlib...")
+
+# Extract displacement data (assume `uh` is the displacement field from the FEM solution)
+displacement = uh.x.array  # Get displacement values as an array
+
+# Reshape displacement into a grid, assuming 2 displacement components per node (x and y)
+num_nodes = domain.geometry.x.shape[0]  # Number of nodes in the mesh
+displacement_grid = displacement.reshape((num_nodes, 2))  # Each node has 2 components (u_x, u_y)
+
+# For visualizing the displacement (e.g., magnitude of displacement)
+displacement_magnitude = np.linalg.norm(displacement_grid, axis=1)
+
+# Plotting the displacement magnitude
+fig, ax = plt.subplots()
+sc = ax.scatter(domain.geometry.x[:, 0], domain.geometry.x[:, 1], c=displacement_magnitude, cmap='viridis')
+fig.colorbar(sc, ax=ax, label='Displacement Magnitude')
+ax.set_title("Displacement Magnitude")
+ax.set_xlabel("X")
+ax.set_ylabel("Y")
+plt.show()
+
+print("Visualizing pressure field using Matplotlib...")
+
+# Extract pressure values
+pressure_values = pressure.x.array.real  # Assuming pressure is a scalar field
+
+# Plotting pressure field (use the same mesh grid as for displacement)
+fig, ax = plt.subplots()
+sc = ax.scatter(domain.geometry.x[:, 0], domain.geometry.x[:, 1], c=pressure_values, cmap='plasma')
+fig.colorbar(sc, ax=ax, label='Pressure')
+ax.set_title("Pressure Field")
+ax.set_xlabel("X")
+ax.set_ylabel("Y")
+plt.show()
+'''
+
+'''
 # Extract and Plot 1D Data Along Vertical Line (y-axis)
 tol = 0.001
 y = np.linspace(-1 + tol, 1 - tol, 101)  # Avoid edges to stay inside mesh
 points = np.zeros((3, 101))
 points[1] = y  # Points lie along vertical line x=0
+u_values = []
+p_values = []
 
 # Bounding-box tree for fast point-in-cell queries
 bb_tree = geometry.bb_tree(domain, domain.topology.dim)
 
 # Find mesh cells containing the line points
+
 cell_candidates = geometry.compute_collisions_points(bb_tree, points.T)
 colliding_cells = geometry.compute_colliding_cells(domain, cell_candidates, points.T)
-
 
 points_on_proc = []
 cells = []
@@ -128,6 +217,9 @@ if len(points_on_proc) == 0:
     print(f"Rank {MPI.COMM_WORLD.rank}: No points found.")
 
 # Plot 1D Profiles of Displacement and Pressure
+'''
+
+'''
 fig = plt.figure()
 plt.plot(points_on_proc[:, 1], 50 * u_values, "k", linewidth=2, label="Deflection ($\\times 50$)")
 plt.plot(points_on_proc[:, 1], p_values, "b--", linewidth=2, label="Load")
@@ -136,6 +228,17 @@ plt.xlabel("y")
 plt.legend()
 # If run in parallel as a python file, save a plot per processor
 plt.savefig(f"membrane_rank{MPI.COMM_WORLD.rank:d}.png")
+'''
+
+
+'''
+fig, ax = plt.subplots()
+ax.plot(points_on_proc[:, 1], 50 * u_values, "k", linewidth=2, label="Deflection ($\\times 50$)")
+ax.plot(points_on_proc[:, 1], p_values, "b--", linewidth=2, label="Load")
+ax.grid(True)
+ax.set_xlabel("y")
+ax.legend()
+plt.show()
 
 # Write Results to Disk
 print("Writing output to disk...")
@@ -155,3 +258,16 @@ with dolfinx.io.VTXWriter(MPI.COMM_WORLD, results_folder / "membrane_pressure.bp
 with dolfinx.io.VTXWriter(MPI.COMM_WORLD, results_folder / "membrane_deflection.bp", [uh], engine="BP4") as vtx:
     vtx.write(0.0)
 print("Output written.")
+'''
+
+
+
+'''
+with XDMFFile(MPI.COMM_WORLD, results_folder / "membrane_pressure.xdmf", "w") as xdmf:
+    xdmf.write_mesh(domain)
+    xdmf.write_function(pressure)
+with XDMFFile(MPI.COMM_WORLD, results_folder / "membrane_deflection.xdmf", "w") as xdmf:
+    xdmf.write_mesh(domain)
+    xdmf.write_function(uh)
+'''
+
