@@ -6,9 +6,10 @@ This tutorial will cover the function and expect output of Part_1_Example.py wit
 To create the digital geometry of the desired shape, the Python-API of GMSH is used. 
 
 ``` python
-# Mesh Generation for Model (2D Circular Disk)
+# Library Imports
 import gmsh # Import GMSH Python API, necessary for 3D Finite Element Mesh generation for loading into DOLFINx
 
+# Mesh Generation for Model (2D Circular Disk)
 gmsh.initialize()  # Initialize the Gmsh API session
 membrane = gmsh.model.occ.addDisk(0, 0, 0, 1, 1) # Create a 2D disk with radius 1 centered at origin
 gmsh.model.occ.synchronize() # Finalize CAD operations and synchronize the model
