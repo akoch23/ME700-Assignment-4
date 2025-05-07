@@ -52,3 +52,53 @@ gmsh.finalize()
 V = fem.functionspace(domain, ("Lagrange", 1))  # Linear Lagrange function space (scalar field) for displacement
 print("Function space V defined.")
 ```
+
+## Define Spatially Varying Load
+
+``` python
+# Define Mathematical Expression for External Load (Pressure)
+x = ufl.SpatialCoordinate(domain)  # Spatial coordinates (symbolic) # Get symbolic spatial coordinate x = (x[0], x[1])
+beta = fem.Constant(domain, default_scalar_type(12))  # Controls decay of load
+R0 = fem.Constant(domain, default_scalar_type(0.3))  # Offset in y-direction
+p = 4 * ufl.exp(-beta**2 * (x[0]**2 + (x[1] - R0)**2))  # Gaussian load centered at y = R0
+print("Load expression defined.")
+```
+
+## Establish Boundary Condition (Dirichlet)
+
+```python
+# Define/Apply Boundary Conditions
+def on_boundary(x): # Identify boundary points on circle's edge using radius check
+    return np.isclose(np.sqrt(x[0]**2 + x[1]**2), 1)  # Dirichlet BC on the circle
+
+boundary_dofs = fem.locate_dofs_geometrical(V, on_boundary)  # Locate DOFs on boundary
+bc = fem.dirichletbc(default_scalar_type(0), boundary_dofs, V)  # Set u = 0 on boundary (clamped)
+print("Boundary conditions applied.")
+```
+
+## Define Variational Problem (Weak Formulation)
+
+```python
+# Define Variational Problem (Weak Formulation)
+u = ufl.TrialFunction(V) # Trial function (unknown displacement)
+v = ufl.TestFunction(V) # Test function (virtual displacement)
+a = ufl.dot(ufl.grad(u), ufl.grad(v)) * ufl.dx  # Bilinear form (stiffness matrix)
+L = p * v * ufl.dx  # Linear form (load vector)
+
+problem = LinearProblem(a, L, bcs=[bc], petsc_options={"ksp_type": "preonly", "pc_type": "lu"})  # Solver setup, where ksp_type is for direct solver and pc_type is for LU decomposition
+print("Problem setup complete. Solving...")
+uh = problem.solve()  # Solve for displacement field
+print("Solve complete.")
+```
+
+## Interpolation of Spatiality Varying Load Function into Function Space (Visualization)
+
+```python
+# Interpolate Pressure Field for Visualization
+Q = fem.functionspace(domain, ("Lagrange", 5))  # Higher-order space for smoother visualization
+expr = fem.Expression(p, Q.element.interpolation_points())  # Interpolation of p to Q
+pressure = fem.Function(Q)
+pressure.interpolate(expr)
+print("Pressure interpolated.")
+```
+
