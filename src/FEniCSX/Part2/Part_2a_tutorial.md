@@ -141,7 +141,7 @@ plotter.close()
 print("2D image of deformed grid generated.")
 ```
 
-![image](https://github.com/user-attachments/assets/b4cf8028-7370-4b74-b3b0-0381bb194b0b)
+![image](https://github.com/user-attachments/assets/3a1b3d72-c1d4-4691-95cc-fe76c65f4d8f)
 
 
 ```python
