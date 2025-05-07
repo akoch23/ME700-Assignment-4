@@ -153,6 +153,8 @@ plotter.screenshot("deformed_membrane.png")
 plotter.close()
 print("Deformation image generated.")
 ```
+![image](https://github.com/user-attachments/assets/76766b4a-12a6-4bb6-80ff-942e4af6127d)
+
 
 ## Plot Load over Domain
 
@@ -183,3 +185,51 @@ plotter.screenshot("pressure_field.png")
 plotter.close()
 print("Pressure plot image generated.")
 ```
+![image](https://github.com/user-attachments/assets/ef7f6f93-f1a2-4487-a212-a9b7a45b291e)
+
+
+## Comparing Deflection and Load in 2D
+
+```python
+# Extract and Plot 2D Data (y-axis)
+tol = 0.001
+y = np.linspace(-1 + tol, 1 - tol, 101)  # Avoid edges to stay inside mesh
+points = np.zeros((3, 101))
+points[1] = y  # Points lie along vertical line x=0
+u_values = []
+p_values = []
+
+# Bounding-box tree for fast point-in-cell queries
+bb_tree = geometry.bb_tree(domain, domain.topology.dim)
+
+# Find mesh cells containing the line points
+
+cell_candidates = geometry.compute_collisions_points(bb_tree, points.T)
+colliding_cells = geometry.compute_colliding_cells(domain, cell_candidates, points.T)
+
+points_on_proc = []
+cells = []
+for i, point in enumerate(points.T):
+    if len(colliding_cells.links(i)) > 0:
+        points_on_proc.append(point)
+        cells.append(colliding_cells.links(i)[0])
+
+points_on_proc = np.array(points_on_proc, dtype=np.float64)
+u_values = uh.eval(points_on_proc, cells)  # Evaluate displacement
+p_values = pressure.eval(points_on_proc, cells)  # Evaluate pressure
+if len(points_on_proc) == 0:
+    print(f"Rank {MPI.COMM_WORLD.rank}: No points found.")
+
+# Plot 1D Profiles of Displacement and Pressure
+
+fig = plt.figure()
+plt.plot(points_on_proc[:, 1], 50 * u_values, "k", linewidth=2, label="Deflection ($\\times 50$)")
+plt.plot(points_on_proc[:, 1], p_values, "b--", linewidth=2, label="Load")
+plt.grid(True)
+plt.xlabel("y")
+plt.legend()
+# If run in parallel as a python file, save a plot per processor
+plt.savefig(f"membrane_rank{MPI.COMM_WORLD.rank:d}.png")
+```
+![image](https://github.com/user-attachments/assets/1ad37821-4833-4203-8528-b81f4fe8f179)
+
