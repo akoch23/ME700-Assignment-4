@@ -17,7 +17,21 @@ gdim = 2 # Geometric dimension for 2D model
 gmsh.model.addPhysicalGroup(gdim, [membrane], 1) # Assign physical group for FEM tagging
 gmsh.option.setNumber("Mesh.CharacteristicLengthMin", 0.05) # Set mesh resolution (min)
 gmsh.option.setNumber("Mesh.CharacteristicLengthMax", 0.05) # Set mesh resolution (max)
-gmsh.model.mesh.generate(gdim) # Generate 2D mesh
+gmsh.model.mesh.generate(gdim) # Generate Final 2D mesh
 print("GMSH mesh generated.")
 ```
+
+After this particular section of code, you should recieve this information at output (you can set a breakpoint after the last above line to test this):
+``` python
+Info    : Meshing 1D...
+Info    : Meshing curve 1 (Ellipse)
+Info    : Done meshing 1D (Wall 0.00019836s, CPU 0.00016s)
+Info    : Meshing 2D...
+Info    : Meshing surface 1 (Plane, Frontal-Delaunay)
+Info    : Done meshing 2D (Wall 0.0740319s, CPU 0.073866s)
+Info    : 1550 nodes 3099 elements
+GMSH mesh generated.
+```
+
+
 
