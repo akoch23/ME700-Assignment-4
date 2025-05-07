@@ -41,7 +41,7 @@ gmsh.finalize()
 
 # Define Function Space
 V = fem.functionspace(domain, ("Lagrange", 1))  # Linear Lagrange function space (scalar field) for displacement
-Q = fem.functionspace(domain, ("Lagrange", 5)) # 5th Order Lagrance function space for pressure
+Q = fem.functionspace(domain, ("Lagrange", 5)) # 5th Order Lagrange function space for pressure
 print("Function space V defined.")
 print("Function space Q defined.")
 
