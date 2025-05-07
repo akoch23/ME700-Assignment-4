@@ -66,9 +66,9 @@ p = 4 * ufl.exp(-beta**2 * (x[0]**2 + (x[1] - R0)**2))  # Gaussian load centered
 print("Load expression defined.")
 ```
 
-Say I also happen to accidentally assign different function spaces to the locate_dofs_geometrical function and dirichletbc function.
-
 ## Establish Boundary Condition (Dirichlet)
+
+Say I also happen to accidentally assign different function spaces to the locate_dofs_geometrical function and dirichletbc function.
 
 ```python
 # Define/Apply Boundary Conditions
