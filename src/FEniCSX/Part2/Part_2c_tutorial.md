@@ -115,4 +115,4 @@ Problem setup complete. Solving...
 Segmentation fault
 ```
 
-These two functions must use the same function space, as otherwise the boundary_dofs will be located using the geometry of one function space, but apply the DOFs as if they belong to the other function space, leading to undefined behavior (out-of-bounds DOF list, etc.) and consequently a segmentation fault during the process of assembling the boundary conditions to solve the variational problem. 
+These two functions (locate_dofs_geometrical() and dirichletbc()) must use the same function space, as otherwise the boundary_dofs will be located using the geometry of one function space, but apply the DOFs as if they belong to the other function space, leading to undefined behavior (out-of-bounds DOF list, etc.) and consequently a segmentation fault during the process of assembling the boundary conditions to solve the variational problem. 
