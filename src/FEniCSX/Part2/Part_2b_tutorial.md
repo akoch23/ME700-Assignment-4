@@ -1,5 +1,9 @@
 # Part B: Mesh Refinement Study (Beam Deflection)
 
+Based on this example:
+![image](https://github.com/user-attachments/assets/3a0d3936-20fa-455d-83c2-e22ef42324b3)
+
+
 ## Library Imports
 ```python
 # Necessary Library Imports
