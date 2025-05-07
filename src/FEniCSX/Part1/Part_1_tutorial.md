@@ -33,5 +33,22 @@ Info    : 1550 nodes 3099 elements
 GMSH mesh generated.
 ```
 
+## Importing Generated Mesh (GMSH to DOLFINx)
 
+```python
+# Specific Library Imports for DOLFINx Operations
+from dolfinx.io import gmshio # Tools to convert Gmsh models into DOLFINx mesh structures
+from dolfinx.fem.petsc import LinearProblem # High-level interface for linear variational problems
+from mpi4py import MPI # Parallel computing via MPI
 
+# Convert Gmsh Mesh to DOLFINx Mesh
+gmsh_model_rank = 0  # Ensure only one process loads the mesh (MPI parallelism)
+mesh_comm = MPI.COMM_WORLD  # MPI communicator for parallelism
+domain, cell_markers, facet_markers = gmshio.model_to_mesh(gmsh.model, mesh_comm, gmsh_model_rank, gdim=gdim)
+print(f"Rank {MPI.COMM_WORLD.rank}: Mesh conversion to DOLFINx done.")
+gmsh.finalize()
+
+# Define Function Space
+V = fem.functionspace(domain, ("Lagrange", 1))  # Linear Lagrange function space (scalar field) for displacement
+print("Function space V defined.")
+```
