@@ -80,6 +80,21 @@ bc = fem.dirichletbc(default_scalar_type(0), boundary_dofs, V)  # Set u = 0 on b
 print("Boundary conditions applied.")
 ```
 
+## Define Variational Problem (Weak Formulation)
+
+```python
+# Define Variational Problem (Weak Formulation)
+u = ufl.TrialFunction(V) # Trial function (unknown displacement)
+v = ufl.TestFunction(V) # Test function (virtual displacement)
+a = ufl.dot(ufl.grad(u), ufl.grad(v)) * ufl.dx  # Bilinear form (stiffness matrix)
+L = p * v * ufl.dx  # Linear form (load vector)
+
+problem = LinearProblem(a, L, bcs=[bc], petsc_options={"ksp_type": "preonly", "pc_type": "lu"})  # Solver setup, where ksp_type is for direct solver and pc_type is for LU decomposition
+print("Problem setup complete. Solving...")
+uh = problem.solve()  # Solve for displacement field
+print("Solve complete.")
+```
+
 This leads to this output:
 
 ```
@@ -100,4 +115,4 @@ Problem setup complete. Solving...
 Segmentation fault
 ```
 
-These two functions must use the same function space, as otherwise the boundary_dofs will be located using the geometry of one function space, but apply them as if they belong to the other functions space, leading to undefined behavior and consequently a segmentation fault during the process of applying the function over the domain and altering the created mesh.
+These two functions must use the same function space, as otherwise the boundary_dofs will be located using the geometry of one function space, but apply the DOFs as if they belong to the other function space, leading to undefined behavior (out-of-bounds DOF list, etc.) and consequently a segmentation fault during the process of assembling the boundary conditions to solve the variational problem. 
