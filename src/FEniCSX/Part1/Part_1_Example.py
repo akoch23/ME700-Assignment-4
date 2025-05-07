@@ -149,45 +149,8 @@ plotter.screenshot("pressure_field.png")
 plotter.close()
 print("Pressure plot image generated.")
 
-'''
-print("Visualizing displacement field using Matplotlib...")
 
-# Extract displacement data (assume `uh` is the displacement field from the FEM solution)
-displacement = uh.x.array  # Get displacement values as an array
-
-# Reshape displacement into a grid, assuming 2 displacement components per node (x and y)
-num_nodes = domain.geometry.x.shape[0]  # Number of nodes in the mesh
-displacement_grid = displacement.reshape((num_nodes, 2))  # Each node has 2 components (u_x, u_y)
-
-# For visualizing the displacement (e.g., magnitude of displacement)
-displacement_magnitude = np.linalg.norm(displacement_grid, axis=1)
-
-# Plotting the displacement magnitude
-fig, ax = plt.subplots()
-sc = ax.scatter(domain.geometry.x[:, 0], domain.geometry.x[:, 1], c=displacement_magnitude, cmap='viridis')
-fig.colorbar(sc, ax=ax, label='Displacement Magnitude')
-ax.set_title("Displacement Magnitude")
-ax.set_xlabel("X")
-ax.set_ylabel("Y")
-plt.show()
-
-print("Visualizing pressure field using Matplotlib...")
-
-# Extract pressure values
-pressure_values = pressure.x.array.real  # Assuming pressure is a scalar field
-
-# Plotting pressure field (use the same mesh grid as for displacement)
-fig, ax = plt.subplots()
-sc = ax.scatter(domain.geometry.x[:, 0], domain.geometry.x[:, 1], c=pressure_values, cmap='plasma')
-fig.colorbar(sc, ax=ax, label='Pressure')
-ax.set_title("Pressure Field")
-ax.set_xlabel("X")
-ax.set_ylabel("Y")
-plt.show()
-'''
-
-'''
-# Extract and Plot 1D Data Along Vertical Line (y-axis)
+# Extract and Plot 2D Data (y-axis)
 tol = 0.001
 y = np.linspace(-1 + tol, 1 - tol, 101)  # Avoid edges to stay inside mesh
 points = np.zeros((3, 101))
@@ -217,9 +180,7 @@ if len(points_on_proc) == 0:
     print(f"Rank {MPI.COMM_WORLD.rank}: No points found.")
 
 # Plot 1D Profiles of Displacement and Pressure
-'''
 
-'''
 fig = plt.figure()
 plt.plot(points_on_proc[:, 1], 50 * u_values, "k", linewidth=2, label="Deflection ($\\times 50$)")
 plt.plot(points_on_proc[:, 1], p_values, "b--", linewidth=2, label="Load")
@@ -228,46 +189,3 @@ plt.xlabel("y")
 plt.legend()
 # If run in parallel as a python file, save a plot per processor
 plt.savefig(f"membrane_rank{MPI.COMM_WORLD.rank:d}.png")
-'''
-
-
-'''
-fig, ax = plt.subplots()
-ax.plot(points_on_proc[:, 1], 50 * u_values, "k", linewidth=2, label="Deflection ($\\times 50$)")
-ax.plot(points_on_proc[:, 1], p_values, "b--", linewidth=2, label="Load")
-ax.grid(True)
-ax.set_xlabel("y")
-ax.legend()
-plt.show()
-
-# Write Results to Disk
-print("Writing output to disk...")
-results_folder = Path("C:/Users/kochl/OneDrive/Desktop/ME700_Results/")
-results_folder.mkdir(exist_ok=True, parents=True)
-
-if MPI.COMM_WORLD.rank == 0:
-    results_folder.mkdir(exist_ok=True, parents=True)
-MPI.COMM_WORLD.Barrier()
-
-pressure.name = "Load"
-uh.name = "Deflection"
-
-# Write pressure and deflection fields in VTX format
-with dolfinx.io.VTXWriter(MPI.COMM_WORLD, results_folder / "membrane_pressure.bp", [pressure], engine="BP4") as vtx:
-    vtx.write(0.0)
-with dolfinx.io.VTXWriter(MPI.COMM_WORLD, results_folder / "membrane_deflection.bp", [uh], engine="BP4") as vtx:
-    vtx.write(0.0)
-print("Output written.")
-'''
-
-
-
-'''
-with XDMFFile(MPI.COMM_WORLD, results_folder / "membrane_pressure.xdmf", "w") as xdmf:
-    xdmf.write_mesh(domain)
-    xdmf.write_function(pressure)
-with XDMFFile(MPI.COMM_WORLD, results_folder / "membrane_deflection.xdmf", "w") as xdmf:
-    xdmf.write_mesh(domain)
-    xdmf.write_function(uh)
-'''
-
