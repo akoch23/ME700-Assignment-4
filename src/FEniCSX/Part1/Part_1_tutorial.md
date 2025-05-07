@@ -5,7 +5,7 @@ This tutorial will cover the function and expect output of Part_1_Example.py wit
 ## Creating the Mesh
 To create the digital geometry of the desired shape, the Python-API of GMSH is used. 
 
-```
+``` python
 # Mesh Generation for Model (2D Circular Disk)
 gmsh.initialize()  # Initialize the Gmsh API session
 membrane = gmsh.model.occ.addDisk(0, 0, 0, 1, 1) # Create a 2D disk (x, y, z, x-radius, y-radius) with radius 1 centered at origin
