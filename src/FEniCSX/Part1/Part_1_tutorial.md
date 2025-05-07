@@ -102,3 +102,84 @@ pressure.interpolate(expr)
 print("Pressure interpolated.")
 ```
 
+## Plotting Deflection (u_h) over Domain
+
+```python
+# PyVista Visualization of Deformed Mesh
+print("Starting PyVista visualization setup...")
+
+# Extract topology from mesh and create displacement pyvista mesh
+topology, cell_types, x = vtk_mesh(uh.function_space)  # Extract mesh for VTK
+grid = pyvista.UnstructuredGrid(topology, cell_types, x.copy())  # PyVista grid from mesh
+
+# Ensure the warp is applied to z-direction only by rotating mesh
+grid.points[:, 2] = 0.0  # flatten to XY plane if necessary
+# Set deflection values and add it to plotter
+grid.point_data["u"] = uh.x.array  # Attach displacement data
+warped = grid.warp_by_scalar("u", factor=25) # Exaggerate displacement for visualization of displacement
+print("PyVista grid for displacement created.")
+
+print("Displacement shape:", uh.x.array.shape)
+print("Number of points in mesh:", grid.points.shape)
+
+if uh.x.array.shape[0] != grid.points.shape[0]:
+    print("Mismatch between scalar data and mesh points. Skipping warp.")
+else:
+    grid.point_data["u"] = uh.x.array
+    warped = grid.warp_by_scalar("u", factor=25)
+    print("Warping successful.")
+
+"""
+plotter = pyvista.Plotter()
+plotter.open_gif("deformed_membrane.gif")
+plotter.add_mesh(warped, show_edges=True, show_scalar_bar=True, scalars="u")
+plotter.write_frame()
+plotter.close()
+"""
+
+plotter = pyvista.Plotter(off_screen=True) # Off screen argument necessary
+plotter.add_mesh(warped, show_edges=True, show_scalar_bar=True, scalars="u")
+plotter.view_xy()
+plotter.camera.zoom(2.0)
+plotter.camera_position = [
+    (5, 5, 5),   # camera location
+    (0, 0, 0),      # focal point (where the camera looks)
+    (0, 0, 1),      # up direction
+]
+
+# This triggers rendering and saves an image
+plotter.render()
+plotter.screenshot("deformed_membrane.png")
+plotter.close()
+print("Deformation image generated.")
+```
+
+## Plot Load over Domain
+
+```python
+# PyVista Visualization of Pressure Field
+p_grid = pyvista.UnstructuredGrid(*vtk_mesh(Q))  # Create PyVista grid for pressure
+p_grid.point_data["p"] = pressure.x.array.real  # Attach pressure data
+warped_p = p_grid.warp_by_scalar("p", factor=0.5)  # Warp to visualize pressure
+warped_p.set_active_scalars("p")
+print("PyVista grid for pressure field created.")
+
+print("Pressure field shape:", pressure.x.array.real)
+# print("Number of points in mesh:")
+
+
+plotter = pyvista.Plotter(off_screen=True)
+plotter.add_mesh(warped_p, show_scalar_bar=True)
+plotter.view_xy()
+plotter.camera.zoom(1.25)
+plotter.camera_position = [
+    (5, 5, 5),   # camera location
+    (0, 0, 0),      # focal point (where the camera looks)
+    (0, 0, 1),      # up direction
+]
+
+plotter.render()
+plotter.screenshot("pressure_field.png")
+plotter.close()
+print("Pressure plot image generated.")
+```
