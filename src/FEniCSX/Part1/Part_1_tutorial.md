@@ -2,13 +2,34 @@
 
 This tutorial will cover the function and expect output of Part_1_Example.py within this repository, based on the implementation guide of similar name from the official FEniCSx tutorial handbook.
 
+## Necessary Library Imports
+```
+# Library Imports
+import os
+import gmsh # Import GMSH Python API, necessary for 3D Finite Element Mesh generation for loading into DOLFINx
+import dolfinx.io # Import necessary computing environment (FEniCS)
+import numpy as np # Import Python Numerical library for specific mathematical operations
+import matplotlib.pyplot as plt # Import Python Graphical Plotting library for data plotting, library call abbreviated as "plt"
+import ufl # Import Unified Form Language (FEniCS)
+import pyvista # Import Python library for 3D data visualization (FE meshs and related animations)
+pyvista.start_xvfb()  # Start virtual framebuffer for headless rendering
+
+# Specific DOLFINx imports for FEM operations
+from dolfinx.io import gmshio # Tools to convert Gmsh models into DOLFINx mesh structures
+from dolfinx.fem.petsc import LinearProblem # High-level interface for linear variational problems
+from mpi4py import MPI # Parallel computing via MPI
+from dolfinx import fem # FEM functionality (function spaces, BCs, etc.)
+from dolfinx import default_scalar_type # Sets float precision for DOLFINx operations
+from dolfinx.plot import vtk_mesh # Conversion of DOLFINx meshes to VTK format for PyVista
+from dolfinx.io import XDMFFile
+from dolfinx import geometry # Geometry tools for queries and evaluations
+from pathlib import Path # File and directory path manipulation
+```
+
 ## Creating the Mesh
 To create the digital geometry of the desired shape, the Python-API of GMSH is used. 
 
 ``` python
-# Library Imports
-import gmsh # Import GMSH Python API, necessary for 3D Finite Element Mesh generation for loading into DOLFINx
-
 # Mesh Generation for Model (2D Circular Disk)
 gmsh.initialize()  # Initialize the Gmsh API session
 membrane = gmsh.model.occ.addDisk(0, 0, 0, 1, 1) # Create a 2D disk with radius 1 centered at origin
