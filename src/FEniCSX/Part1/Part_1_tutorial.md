@@ -7,8 +7,10 @@ To create the digital geometry of the desired shape, the Python-API of GMSH is u
 
 ``` python
 # Mesh Generation for Model (2D Circular Disk)
+import gmsh # Import GMSH Python API, necessary for 3D Finite Element Mesh generation for loading into DOLFINx
+
 gmsh.initialize()  # Initialize the Gmsh API session
-membrane = gmsh.model.occ.addDisk(0, 0, 0, 1, 1) # Create a 2D disk (x, y, z, x-radius, y-radius) with radius 1 centered at origin
+membrane = gmsh.model.occ.addDisk(0, 0, 0, 1, 1) # Create a 2D disk with radius 1 centered at origin
 gmsh.model.occ.synchronize() # Finalize CAD operations and synchronize the model
 gdim = 2 # Geometric dimension for 2D model
 gmsh.model.addPhysicalGroup(gdim, [membrane], 1) # Assign physical group for FEM tagging
@@ -17,3 +19,4 @@ gmsh.option.setNumber("Mesh.CharacteristicLengthMax", 0.05) # Set mesh resolutio
 gmsh.model.mesh.generate(gdim) # Generate 2D mesh
 print("GMSH mesh generated.")
 ```
+
