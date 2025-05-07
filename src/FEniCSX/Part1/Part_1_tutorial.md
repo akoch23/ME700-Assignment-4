@@ -3,7 +3,7 @@
 This tutorial will cover the function and expect output of Part_1_Example.py within this repository, based on the implementation guide of similar name from the official FEniCSx tutorial handbook.
 
 ## Necessary Library Imports
-```
+```python
 # Library Imports
 import os
 import gmsh # Import GMSH Python API, necessary for 3D Finite Element Mesh generation for loading into DOLFINx
