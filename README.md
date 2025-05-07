@@ -29,7 +29,7 @@ Follow by installing DolfinX and other necessary libraries:
 Note for Windows users: The below command, which is listed on the Fenicsx official download site, will work for the installion of fenics-dolfinx and pyvista, but NOT mpich. The petsc library will also not install properly on Windows. This can be circumvented by using Docker or WSL2 (Virtual Linux Interface).
 ```bash
 conda install -c conda-forge fenics-dolfinx mpich pyvista
-`
+```
 
 ### Step 4 (Optional, important if using personal VS code editor)
 Finally, install remaining libraries:
