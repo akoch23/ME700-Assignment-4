@@ -1,5 +1,12 @@
 # Part A: Problem with a Known Analytical Solution (Poisson Equation)
 
+## Library Imports for Specific Functions
+```python
+from mpi4py import MPI # Message Passing Interface, required for parallel processing
+from dolfinx import mesh # Mesh generation class within DolfinX
+from dolfinx import fem
+```
+
 ## Creating the Mesh
 To create the digital geometry of the desired shape, the Python-API of GMSH is used.
 
