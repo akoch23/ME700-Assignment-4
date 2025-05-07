@@ -22,7 +22,7 @@ print("GMSH mesh generated.")
 ```
 
 After this particular section of code, you should recieve this information at output (you can set a breakpoint after the last above line to test this):
-``` python
+```
 Info    : Meshing 1D...
 Info    : Meshing curve 1 (Ellipse)
 Info    : Done meshing 1D (Wall 0.00019836s, CPU 0.00016s)
